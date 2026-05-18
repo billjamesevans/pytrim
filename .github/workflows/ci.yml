@@ -20,8 +20,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-      - run: python -m pip install -e ".[dev]"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[dev,security]"
       - run: python -m pytest
       - run: python -m ruff check .
+      - run: python -m mypy src/pytrim tests
+      - run: python -m bandit -r src examples -q
+      - run: detect-secrets scan --all-files --exclude-files '(^\.git/|^\.venv/|^dist/|^build/|^\.mypy_cache/|^\.pytest_cache/|^\.ruff_cache/|\.egg-info/|__pycache__/|\.pyc$)'
+      - run: python -m pip_audit
       - run: python -m build
       - run: python -m twine check dist/*
