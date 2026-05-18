@@ -19,7 +19,7 @@ from .utils import is_stdlib_module, iter_python_files, top_import_name
 def analyze_project(
     path: str | Path,
     *,
-    run_import_timing: bool = True,
+    run_import_timing: bool = False,
     import_time_limit: int = 20,
     import_time_timeout: float = 10.0,
     max_files: int = 5000,
@@ -61,10 +61,9 @@ def analyze_project(
             third_party,
             limit=import_time_limit,
             timeout_seconds=import_time_timeout,
-            cwd=project_root,
         )
     elif not run_import_timing:
-        warnings.append("Import timing disabled by --no-import-time.")
+        warnings.append("Import timing disabled by default. Use --import-time to enable subprocess timing checks.")
 
     sizes = [estimate_distribution_size(dep.name) for dep in declared_dependencies]
     heavy_by_time = {

@@ -47,16 +47,16 @@ def render_markdown(report: AnalysisReport) -> str:
         lines.extend(_timing_table(ok_timings[:15]))
     else:
         lines.append(
-            "No successful import timings were collected. Run without `--no-import-time` "
-            "and make sure dependencies are installed."
+            "No successful import timings were collected. Use `--import-time` "
+            "to enable subprocess timing checks."
         )
     failed_timings = [item for item in report.import_timings if item.status != "ok"]
     if failed_timings:
         lines.append("")
         lines.append("Import timing failures:")
-        for item in failed_timings[:10]:
-            reason = f" — {item.reason}" if item.reason else ""
-            lines.append(f"- `{item.module}`: {item.status}{reason}")
+        for timing in failed_timings[:10]:
+            reason = f" — {timing.reason}" if timing.reason else ""
+            lines.append(f"- `{timing.module}`: {timing.status}{reason}")
     lines.append("")
 
     lines.append("## Dependency usage")
@@ -109,9 +109,9 @@ def render_markdown(report: AnalysisReport) -> str:
     if unavailable_sizes:
         lines.append("")
         lines.append("Unavailable size checks:")
-        for item in unavailable_sizes[:10]:
-            reason = f" — {item.reason}" if item.reason else ""
-            lines.append(f"- `{item.distribution}`: {item.status}{reason}")
+        for size in unavailable_sizes[:10]:
+            reason = f" — {size.reason}" if size.reason else ""
+            lines.append(f"- `{size.distribution}`: {size.status}{reason}")
     lines.append("")
 
     lines.append("## Notes")

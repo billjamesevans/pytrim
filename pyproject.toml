@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytrim"
-version = "0.2.0"
+version = "0.2.1"
 description = "A zero-dependency Python project optimizer for import cost, dependency bloat, lazy imports, and CI quality gates."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -36,10 +36,16 @@ Changelog = "https://github.com/billjamesevans/pytrim/releases"
 
 [project.optional-dependencies]
 dev = [
+  "bandit>=1.9",
   "build>=1.2",
+  "mypy>=2.1",
   "pytest>=9",
   "ruff>=0.14",
   "twine>=6",
+]
+security = [
+  "detect-secrets>=1.5",
+  "pip-audit>=2.10",
 ]
 
 [project.scripts]
@@ -61,3 +67,7 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["B", "E", "F", "I", "N", "UP", "W"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from . import __version__
 from .analyze import analyze_project
+from .models import AnalysisReport
 from .report import render_json, render_markdown
 
 
@@ -46,7 +47,19 @@ def _add_analysis_options(parser: argparse.ArgumentParser) -> None:
         default=".",
         help="Project directory to analyze. Defaults to current directory.",
     )
-    parser.add_argument("--no-import-time", action="store_true", help="Skip subprocess import timing checks.")
+    timing = parser.add_mutually_exclusive_group()
+    timing.add_argument(
+        "--import-time",
+        dest="import_time",
+        action="store_true",
+        help="Run subprocess import timing checks. This imports third-party modules in child processes.",
+    )
+    timing.add_argument(
+        "--no-import-time",
+        dest="import_time",
+        action="store_false",
+        help="Skip subprocess import timing checks. This is the default.",
+    )
     parser.add_argument(
         "--import-time-limit",
         type=int,
@@ -103,10 +116,10 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def _run_analysis(args: argparse.Namespace):
+def _run_analysis(args: argparse.Namespace) -> AnalysisReport:
     return analyze_project(
         args.path,
-        run_import_timing=not args.no_import_time,
+        run_import_timing=args.import_time,
         import_time_limit=args.import_time_limit,
         import_time_timeout=args.import_time_timeout,
         max_files=args.max_files,
@@ -114,7 +127,7 @@ def _run_analysis(args: argparse.Namespace):
     )
 
 
-def _check_failures(report, args: argparse.Namespace) -> list[str]:
+def _check_failures(report: AnalysisReport, args: argparse.Namespace) -> list[str]:
     failures: list[str] = []
 
     unused_count = len(report.unused_dependencies)
@@ -131,30 +144,30 @@ def _check_failures(report, args: argparse.Namespace) -> list[str]:
 
     if args.max_import_ms is not None:
         slow = [
-            item
-            for item in report.import_timings
-            if item.status == "ok" and item.cumulative_ms is not None and item.cumulative_ms > args.max_import_ms
+            timing
+            for timing in report.import_timings
+            if timing.status == "ok" and timing.cumulative_ms is not None and timing.cumulative_ms > args.max_import_ms
         ]
-        for item in slow[:10]:
-            failures.append(f"Import time for {item.module}: {item.cumulative_ms:g}ms > {args.max_import_ms:g}ms")
+        for timing in slow[:10]:
+            failures.append(f"Import time for {timing.module}: {timing.cumulative_ms:g}ms > {args.max_import_ms:g}ms")
         if len(slow) > 10:
             failures.append(f"Import time failures truncated: {len(slow) - 10} more module(s)")
 
     if args.max_package_mb is not None:
         oversized = [
-            item
-            for item in report.package_sizes
-            if item.status == "ok" and item.size_mb is not None and item.size_mb > args.max_package_mb
+            size
+            for size in report.package_sizes
+            if size.status == "ok" and size.size_mb is not None and size.size_mb > args.max_package_mb
         ]
-        for item in oversized[:10]:
-            failures.append(f"Installed size for {item.distribution}: {item.size_mb:g}MB > {args.max_package_mb:g}MB")
+        for size in oversized[:10]:
+            failures.append(f"Installed size for {size.distribution}: {size.size_mb:g}MB > {args.max_package_mb:g}MB")
         if len(oversized) > 10:
             failures.append(f"Package size failures truncated: {len(oversized) - 10} more package(s)")
 
     return failures
 
 
-def _render_check_text(report, failures: list[str]) -> str:
+def _render_check_text(report: AnalysisReport, failures: list[str]) -> str:
     lines = [f"PyTrim check {'failed' if failures else 'passed'}", ""]
 
     if failures:
@@ -179,7 +192,7 @@ def _render_check_text(report, failures: list[str]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def _render_check_json(report, failures: list[str]) -> str:
+def _render_check_json(report: AnalysisReport, failures: list[str]) -> str:
     payload = {
         "ok": not failures,
         "failures": failures,

@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import re
-import subprocess
+import subprocess  # nosec B404
 import sys
+import tempfile
 from collections.abc import Iterable
 from pathlib import Path
 
 from .models import ImportTiming
 
 _IMPORTTIME_RE = re.compile(r"^import time:\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(.+?)\s*$")
+_MODULE_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*$")
+_IMPORT_MODULE_CODE = "import importlib, sys; importlib.import_module(sys.argv[1])"
 
 
 def measure_import_time(module: str, timeout_seconds: float, cwd: Path | None = None) -> ImportTiming:
@@ -16,13 +19,31 @@ def measure_import_time(module: str, timeout_seconds: float, cwd: Path | None = 
 
     The target module is imported in a child process. This avoids polluting the current
     analyzer process, but the target module's import-time side effects can still occur
-    in that child process. PyTrim only uses this for third-party import roots by default.
+    in that child process. PyTrim only does this when import timing is explicitly enabled.
     """
-    cmd = [sys.executable, "-X", "importtime", "-c", f"import {module}"]
+    if not _MODULE_NAME_RE.fullmatch(module):
+        return ImportTiming(
+            module=module,
+            self_ms=None,
+            cumulative_ms=None,
+            status="error",
+            reason="Invalid module name.",
+        )
+
+    if cwd is None:
+        with tempfile.TemporaryDirectory(prefix="pytrim-importtime-") as temp_dir:
+            return _measure_import_time(module, timeout_seconds=timeout_seconds, cwd=Path(temp_dir))
+
+    return _measure_import_time(module, timeout_seconds=timeout_seconds, cwd=cwd)
+
+
+def _measure_import_time(module: str, timeout_seconds: float, cwd: Path) -> ImportTiming:
+    cmd = [sys.executable, "-X", "importtime", "-c", _IMPORT_MODULE_CODE, module]
     try:
-        completed = subprocess.run(
+        # Safe subprocess use: shell=False, fixed code string, validated module passed as argv.
+        completed = subprocess.run(  # nosec B603
             cmd,
-            cwd=str(cwd) if cwd else None,
+            cwd=str(cwd),
             capture_output=True,
             text=True,
             timeout=timeout_seconds,

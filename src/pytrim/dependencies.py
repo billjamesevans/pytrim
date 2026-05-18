@@ -4,13 +4,14 @@ import importlib.metadata as metadata
 import os
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 try:
     import tomllib
 except ModuleNotFoundError:  # pragma: no cover - package requires py3.11+
     tomllib = None  # type: ignore[assignment]
 
-from .models import DeclaredDependency, PackageSize
+from .models import DeclaredDependency, DependencyUsage, PackageSize
 from .utils import canonicalize_name, import_name_guess, parse_requirement_name
 
 
@@ -53,7 +54,7 @@ def _remember(deps: dict[tuple[str, str], DeclaredDependency], name: str, raw: s
     )
 
 
-def _add_pep621_dependencies(data: dict, deps: dict[tuple[str, str], DeclaredDependency]) -> None:
+def _add_pep621_dependencies(data: dict[str, Any], deps: dict[tuple[str, str], DeclaredDependency]) -> None:
     project = data.get("project") or {}
     for raw in project.get("dependencies") or []:
         name = parse_requirement_name(str(raw))
@@ -69,7 +70,7 @@ def _add_pep621_dependencies(data: dict, deps: dict[tuple[str, str], DeclaredDep
                     _remember(deps, name, str(raw), f"pyproject.toml:[project.optional-dependencies.{group}]")
 
 
-def _add_poetry_dependencies(data: dict, deps: dict[tuple[str, str], DeclaredDependency]) -> None:
+def _add_poetry_dependencies(data: dict[str, Any], deps: dict[tuple[str, str], DeclaredDependency]) -> None:
     poetry = ((data.get("tool") or {}).get("poetry") or {})
     for section_name in ("dependencies", "dev-dependencies"):
         section = poetry.get(section_name) or {}
@@ -93,7 +94,7 @@ def _add_poetry_dependencies(data: dict, deps: dict[tuple[str, str], DeclaredDep
 
 
 def _add_dependency_groups(
-    data: dict,
+    data: dict[str, Any],
     deps: dict[tuple[str, str], DeclaredDependency],
     warnings: list[str],
 ) -> None:
@@ -206,9 +207,7 @@ def dependency_usage_status(
     declared_dependencies: Iterable[DeclaredDependency],
     all_imports: set[str],
     import_to_dist: dict[str, tuple[str, ...]],
-):
-    from .models import DependencyUsage
-
+) -> list[DependencyUsage]:
     usage: list[DependencyUsage] = []
     for dep in declared_dependencies:
         import_names = distribution_import_names(dep.name, import_to_dist)
@@ -286,11 +285,14 @@ def estimate_distribution_size(distribution_name: str) -> PackageSize:
     files = dist.files or []
     for file in files:
         try:
-            path = dist.locate_file(file)
-            if path.is_file():
+            path = Path(str(dist.locate_file(file)))
+        except (OSError, ValueError):
+            path = None
+        if path is not None and path.is_file():
+            try:
                 total += os.path.getsize(path)
-        except Exception:  # noqa: BLE001
-            continue
+            except OSError:
+                pass
     return PackageSize(
         distribution=distribution_name,
         size_mb=round(total / (1024 * 1024), 2),

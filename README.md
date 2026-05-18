@@ -19,7 +19,7 @@ PyTrim never edits your code. It produces reviewable reports and CI-friendly che
 
 ## Security and privacy
 
-PyTrim is local-first. Static scans parse source files with Python's `ast` module and do not import your project code. Optional import timing runs third-party imports in child processes, so use `--no-import-time` when reviewing sensitive projects or code with import-time side effects.
+PyTrim is local-first and safe by default. Static scans parse source files with Python's `ast` module and do not import your project code. Optional import timing must be enabled with `--import-time`; it imports third-party modules in child processes, so leave it off when reviewing sensitive projects or code with import-time side effects.
 
 ## Install locally
 
@@ -44,10 +44,10 @@ PYTHONPATH=src python3 -m pytrim analyze /path/to/your/project
 ## Quick examples
 
 ```bash
-pytrim analyze examples/sample_project --no-import-time
+pytrim analyze examples/sample_project
 pytrim analyze examples/sample_project --json -o pytrim-report.json
-pytrim check examples/sample_project --no-import-time --max-unused 0
-pytrim check examples/sample_project --json --max-import-ms 150
+pytrim check examples/sample_project --max-unused 0
+pytrim check examples/sample_project --import-time --json --max-import-ms 150
 ```
 
 `analyze` writes a human-readable Markdown report by default. `check` prints a compact status report and exits nonzero when a configured threshold is exceeded.
@@ -83,13 +83,13 @@ It compares declared dependencies against static imports. Results marked `unused
 
 ### Import timings
 
-By default, PyTrim runs a subprocess like this for each likely third-party top-level import:
+When `--import-time` is enabled, PyTrim runs a subprocess like this for each likely third-party top-level import:
 
 ```bash
 python -X importtime -c "import pandas"
 ```
 
-This keeps imports out of the analyzer process, but the imported library can still run import-time side effects in the child process. Use `--no-import-time` when you want a purely static scan.
+This keeps imports out of the analyzer process, but the imported library can still run import-time side effects in the child process. Leave import timing disabled when you want a purely static scan.
 
 ### Lazy-import candidates
 
@@ -123,7 +123,8 @@ pytrim analyze [path] [options]
 Options:
   --json                         Emit JSON instead of Markdown
   --output FILE, -o FILE          Write report to a file
-  --no-import-time                Skip subprocess import timing checks
+  --import-time                   Run subprocess import timing checks
+  --no-import-time                Skip subprocess import timing checks, default
   --import-time-limit N           Max third-party modules to time, default 20
   --import-time-timeout SECONDS   Timeout per import, default 10
   --max-files N                   Max Python files to scan, default 5000
@@ -140,7 +141,8 @@ Options:
   --max-lazy-imports N            Max lazy-import candidates
   --max-import-ms N               Max cumulative import time for any measured module
   --max-package-mb N              Max installed package size for any declared dependency
-  --no-import-time                Skip subprocess import timing checks
+  --import-time                   Run subprocess import timing checks
+  --no-import-time                Skip subprocess import timing checks, default
   --import-time-limit N           Max third-party modules to time, default 20
   --import-time-timeout SECONDS   Timeout per import, default 10
   --max-files N                   Max Python files to scan, default 5000
@@ -151,9 +153,12 @@ Options:
 
 ```bash
 python3 -m venv .venv
-.venv/bin/python -m pip install -e ".[dev]"
+.venv/bin/python -m pip install -e ".[dev,security]"
 .venv/bin/python -m pytest
 .venv/bin/python -m ruff check .
+.venv/bin/python -m mypy src/pytrim tests
+.venv/bin/python -m bandit -r src examples -q
+.venv/bin/python -m pip_audit
 .venv/bin/python -m build
 ```
 
@@ -162,7 +167,7 @@ python3 -m venv .venv
 - Static analysis misses dynamic imports and plugin systems.
 - Dependency names do not always match import names.
 - Optional dependencies may be marked unused if their optional code path is not statically imported.
-- Import timing imports third-party packages in a subprocess, which can still trigger child-process side effects.
+- Opt-in import timing imports third-party packages in a subprocess, which can still trigger child-process side effects.
 - Package size checks only work for dependencies installed in the current environment.
 
 ## Roadmap
