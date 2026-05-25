@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from pytrim.analyze import analyze_project
-from pytrim.cli import main
-from pytrim.models import AnalysisReport, PackageSize
-from pytrim.static_scan import scan_python_files
+from project_doctor.analyze import analyze_project
+from project_doctor.cli import main
+from project_doctor.models import AnalysisReport, PackageSize
+from project_doctor.static_scan import scan_python_files
 
 
 def test_package_size_collection_is_opt_in(tmp_path: Path) -> None:
@@ -20,7 +20,7 @@ def test_package_size_collection_is_opt_in(tmp_path: Path) -> None:
 [project]
 name = "demo"
 version = "0.1.0"
-dependencies = ["definitely-not-installed-pytrim-test>=1"]
+dependencies = ["definitely-not-installed-project_doctor-test>=1"]
 """,
         encoding="utf-8",
     )
@@ -40,7 +40,7 @@ def test_package_size_collection_can_be_enabled(tmp_path: Path) -> None:
 [project]
 name = "demo"
 version = "0.1.0"
-dependencies = ["definitely-not-installed-pytrim-test>=1"]
+dependencies = ["definitely-not-installed-project_doctor-test>=1"]
 """,
         encoding="utf-8",
     )
@@ -48,7 +48,7 @@ dependencies = ["definitely-not-installed-pytrim-test>=1"]
 
     report = analyze_project(tmp_path, run_import_timing=False, collect_package_sizes=True)
 
-    assert [item.distribution for item in report.package_sizes] == ["definitely-not-installed-pytrim-test"]
+    assert [item.distribution for item in report.package_sizes] == ["definitely-not-installed-project_doctor-test"]
     assert report.package_sizes[0].status == "unavailable"
 
 
@@ -62,7 +62,7 @@ def test_check_package_threshold_enables_size_collection(
         captured.update(kwargs)
         return AnalysisReport(project_path=str(tmp_path), python_files_scanned=0)
 
-    monkeypatch.setattr("pytrim.cli.analyze_project", fake_analyze_project)
+    monkeypatch.setattr("project_doctor.cli.analyze_project", fake_analyze_project)
 
     status = main(["check", str(tmp_path), "--max-package-mb", "10"])
 
@@ -71,7 +71,7 @@ def test_check_package_threshold_enables_size_collection(
 
 
 def test_installed_package_index_keeps_reverse_distribution_lookup() -> None:
-    from pytrim.dependencies import InstalledPackageIndex, distribution_import_names
+    from project_doctor.dependencies import InstalledPackageIndex, distribution_import_names
 
     index = InstalledPackageIndex.from_import_to_distributions(
         {
@@ -88,8 +88,8 @@ def test_installed_package_index_keeps_reverse_distribution_lookup() -> None:
 
 
 def test_analysis_context_caches_package_sizes(monkeypatch: pytest.MonkeyPatch) -> None:
-    from pytrim.context import AnalysisContext
-    from pytrim.dependencies import InstalledPackageIndex
+    from project_doctor.context import AnalysisContext
+    from project_doctor.dependencies import InstalledPackageIndex
 
     calls: list[str] = []
 
@@ -97,7 +97,7 @@ def test_analysis_context_caches_package_sizes(monkeypatch: pytest.MonkeyPatch) 
         calls.append(distribution_name)
         return PackageSize(distribution=distribution_name, size_mb=1.25, status="ok")
 
-    monkeypatch.setattr("pytrim.context.estimate_distribution_size", fake_estimate)
+    monkeypatch.setattr("project_doctor.context.estimate_distribution_size", fake_estimate)
     context = AnalysisContext(
         installed_packages=InstalledPackageIndex.from_import_to_distributions({}),
     )

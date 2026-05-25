@@ -8,11 +8,11 @@ import tempfile
 import time
 from pathlib import Path
 
-from pytrim import AnalysisContext, analyze_project
+from project_doctor import AnalysisContext, analyze_project
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Benchmark PyTrim analysis throughput.")
+    parser = argparse.ArgumentParser(description="Benchmark Project Doctor analysis throughput.")
     parser.add_argument(
         "project",
         nargs="?",
@@ -36,7 +36,7 @@ def main() -> int:
         project_root = Path(args.project).expanduser().resolve()
         payload = _benchmark_project(project_root, args)
     else:
-        with tempfile.TemporaryDirectory(prefix="pytrim-benchmark-") as temp_dir:
+        with tempfile.TemporaryDirectory(prefix="project-doctor-benchmark-") as temp_dir:
             project_root = Path(temp_dir)
             _write_synthetic_project(project_root, args.files)
             payload = _benchmark_project(project_root, args)
@@ -82,7 +82,7 @@ def _write_synthetic_project(project_root: Path, files: int) -> None:
     (project_root / "pyproject.toml").write_text(
         """
 [project]
-name = "synthetic-pytrim-benchmark"
+name = "synthetic-project-doctor-benchmark"
 version = "0.1.0"
 dependencies = ["requests>=2"]
 """,

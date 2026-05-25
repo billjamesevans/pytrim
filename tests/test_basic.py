@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pytest
 
-from pytrim import analyze_project as public_analyze_project
-from pytrim.analyze import analyze_project
-from pytrim.cli import main
-from pytrim.import_timing import measure_import_time
+from project_doctor import analyze_project as public_analyze_project
+from project_doctor.analyze import analyze_project
+from project_doctor.cli import main
+from project_doctor.import_timing import measure_import_time
 
 
 def test_sample_project_static_analysis() -> None:
@@ -96,7 +96,7 @@ dependencies = ["requests>=2"]
     def fail_if_called(*args: object, **kwargs: object) -> None:
         raise AssertionError("import timing should be opt-in")
 
-    monkeypatch.setattr("pytrim.analyze.measure_import_times", fail_if_called)
+    monkeypatch.setattr("project_doctor.analyze.measure_import_times", fail_if_called)
 
     report = analyze_project(tmp_path)
 

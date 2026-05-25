@@ -1,13 +1,13 @@
-# PyTrim
+# Project Doctor
 
-[![CI](https://github.com/billjamesevans/pytrim/actions/workflows/ci.yml/badge.svg)](https://github.com/billjamesevans/pytrim/actions/workflows/ci.yml)
+[![CI](https://github.com/billjamesevans/project-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/billjamesevans/project-doctor/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-![PyTrim](https://img.shields.io/badge/pytrim-passing-brightgreen)
+![Project Doctor](https://img.shields.io/badge/project--doctor-passing-brightgreen)
 
 A local-first health checker for Python imports, dependencies, startup time, and package bloat.
 
-PyTrim is a zero-dependency analyzer for finding project optimization work that usually hides in plain sight:
+Project Doctor is a zero-dependency analyzer for finding project optimization work that usually hides in plain sight:
 
 - entrypoint startup drag
 - slow third-party imports
@@ -18,11 +18,11 @@ PyTrim is a zero-dependency analyzer for finding project optimization work that 
 - CI thresholds for dependency and import hygiene
 - uv.lock sync status and package explanations
 
-PyTrim never edits your code. It produces reviewable reports and CI-friendly checks so teams can make deliberate changes.
+Project Doctor never edits your code. It produces reviewable reports and CI-friendly checks so teams can make deliberate changes.
 
 ## Security and privacy
 
-PyTrim is local-first and safe by default. Static scans parse source files with Python's `ast` module and do not import your project code. Optional import timing must be enabled with `--import-time`; it imports third-party modules in child processes, so leave it off when reviewing sensitive projects or code with import-time side effects. Installed package size checks are also opt-in with `--package-sizes` because they walk installed distribution metadata.
+Project Doctor is local-first and safe by default. Static scans parse source files with Python's `ast` module and do not import your project code. Optional import timing must be enabled with `--import-time`; it imports third-party modules in child processes, so leave it off when reviewing sensitive projects or code with import-time side effects. Installed package size checks are also opt-in with `--package-sizes` because they walk installed distribution metadata.
 
 ## Install
 
@@ -37,35 +37,35 @@ python3 -m pip install -e .
 Then run:
 
 ```bash
-pytrim analyze /path/to/your/project
+project-doctor analyze /path/to/your/project
 ```
 
 Or without installing:
 
 ```bash
-PYTHONPATH=src python3 -m pytrim analyze /path/to/your/project
+PYTHONPATH=src python3 -m project_doctor analyze /path/to/your/project
 ```
 
-Intended package install path once name/package ownership is settled:
+After the PyPI release is live:
 
 ```bash
-pip install pytrim
-uv tool install pytrim
+pip install project-doctor
+uv tool install project-doctor
 ```
 
 ## Quick examples
 
 ```bash
-pytrim doctor
-pytrim analyze examples/sample_project
-pytrim analyze examples/sample_project --json -o pytrim-report.json
-pytrim analyze examples/sample_project --jobs auto --package-sizes
-pytrim analyze examples/sample_project --entrypoint "python app.py"
-pytrim analyze examples/sample_project --uv
-pytrim check examples/sample_project --max-unused 0
-pytrim check examples/sample_project --import-time --json --max-import-ms 150
-pytrim sync-check examples/sample_project/uv.lock
-pytrim explain-package pandas examples/sample_project --uv
+project-doctor doctor
+project-doctor analyze examples/sample_project
+project-doctor analyze examples/sample_project --json -o project-doctor-report.json
+project-doctor analyze examples/sample_project --jobs auto --package-sizes
+project-doctor analyze examples/sample_project --entrypoint "python app.py"
+project-doctor analyze examples/sample_project --uv
+project-doctor check examples/sample_project --max-unused 0
+project-doctor check examples/sample_project --import-time --json --max-import-ms 150
+project-doctor sync-check examples/sample_project/uv.lock
+project-doctor explain-package pandas examples/sample_project --uv
 ```
 
 `analyze` writes a shareable "wow" report by default. Use `--report detailed` for the longer audit report. `check` prints a compact status report and exits nonzero when a configured threshold is exceeded.
@@ -73,7 +73,7 @@ pytrim explain-package pandas examples/sample_project --uv
 ## Example report
 
 ```text
-PyTrim Report
+Project Doctor Report
 
 Startup time: 1.42s
 Potential avoidable import cost: 630ms
@@ -105,7 +105,7 @@ Suggested quick wins:
 ## Python API
 
 ```python
-from pytrim import AnalysisContext, analyze_project
+from project_doctor import AnalysisContext, analyze_project
 
 context = AnalysisContext.from_environment()
 report = analyze_project(
@@ -121,15 +121,15 @@ print(report.unused_dependencies)
 
 The returned `AnalysisReport` and nested report objects are dataclasses and can be converted to dictionaries with `report.to_dict()`. Reuse `AnalysisContext` when analyzing multiple projects in one process; it keeps installed package metadata and package size estimates cached.
 
-## What PyTrim checks
+## What Project Doctor checks
 
 ### Static import scan
 
-PyTrim parses Python source with `ast`, so it can read imports without importing your project code. Syntax errors are reported as warnings instead of aborting the full scan.
+Project Doctor parses Python source with `ast`, so it can read imports without importing your project code. Syntax errors are reported as warnings instead of aborting the full scan.
 
 ### Dependency usage
 
-PyTrim reads dependencies from:
+Project Doctor reads dependencies from:
 
 - `pyproject.toml` `[project.dependencies]`
 - `pyproject.toml` `[project.optional-dependencies]`
@@ -141,7 +141,7 @@ It compares declared dependencies against static imports. Results marked `unused
 
 ### Import timings
 
-When `--import-time` is enabled, PyTrim runs a subprocess like this for each likely third-party top-level import:
+When `--import-time` is enabled, Project Doctor runs a subprocess like this for each likely third-party top-level import:
 
 ```bash
 python -X importtime -c "import pandas"
@@ -154,16 +154,16 @@ This keeps imports out of the analyzer process, but the imported library can sti
 Entrypoint mode measures the command users actually wait on:
 
 ```bash
-pytrim analyze . --entrypoint "python app.py"
-pytrim analyze . --entrypoint "uvicorn app:app"
-pytrim analyze . --entrypoint "python -m my_cli"
+project-doctor analyze . --entrypoint "python app.py"
+project-doctor analyze . --entrypoint "uvicorn app:app"
+project-doctor analyze . --entrypoint "python -m my_cli"
 ```
 
-PyTrim runs the command with Python import profiling enabled and `shell=False`, then folds the parsed startup import costs into the report. Server-style commands may time out by design; PyTrim still reports import data captured before the timeout.
+Project Doctor runs the command with Python import profiling enabled and `shell=False`, then folds the parsed startup import costs into the report. Server-style commands may time out by design; Project Doctor still reports import data captured before the timeout.
 
 ### Lazy-import candidates
 
-PyTrim looks for imports that are defined at module load but only used inside deferred function or method bodies.
+Project Doctor looks for imports that are defined at module load but only used inside deferred function or method bodies.
 
 For example:
 
@@ -175,7 +175,7 @@ def make_report(rows):
     return pd.DataFrame(rows)
 ```
 
-PyTrim may suggest:
+Project Doctor may suggest:
 
 ```python
 def make_report(rows):
@@ -188,13 +188,13 @@ That kind of change can reduce startup time for CLIs, Lambdas, Flask/FastAPI app
 ## CLI
 
 ```bash
-pytrim doctor [path] [options]
+project-doctor doctor [path] [options]
 
-Runs the default project health report. It is an alias for `pytrim analyze .` with the same analysis options.
+Runs the default project health report. It is an alias for `project-doctor analyze .` with the same analysis options.
 ```
 
 ```bash
-pytrim analyze [path] [options]
+project-doctor analyze [path] [options]
 
 Options:
   --json                         Emit JSON instead of Markdown
@@ -215,7 +215,7 @@ Options:
 ```
 
 ```bash
-pytrim check [path] [options]
+project-doctor check [path] [options]
 
 Options:
   --json                         Emit machine-readable check results
@@ -239,14 +239,14 @@ Options:
 ```
 
 ```bash
-pytrim sync-check [uv.lock] [options]
+project-doctor sync-check [uv.lock] [options]
 
 Options:
   --json                         Emit machine-readable sync results
 ```
 
 ```bash
-pytrim explain-package PACKAGE [path] [options]
+project-doctor explain-package PACKAGE [path] [options]
 
 Options:
   --uv                           Include uv.lock status
@@ -255,60 +255,60 @@ Options:
 
 ## CI
 
-Add PyTrim to GitHub Actions as a dependency hygiene gate:
+Add Project Doctor to GitHub Actions as a dependency hygiene gate:
 
 ```yaml
 - name: Check Python dependency health
-  run: pytrim check . --max-unused 0 --max-undeclared 0 --max-package-mb 100
+  run: project-doctor check . --max-unused 0 --max-undeclared 0 --max-package-mb 100
 ```
 
 Intended full workflow after first package release and name/package ownership confirmation:
 
 ```yaml
-name: pytrim
+name: project-doctor
 
 on: [push, pull_request]
 
 jobs:
-  pytrim:
+  project-doctor:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install pytrim
-      - run: pytrim check . --max-unused 0 --max-undeclared 0
+      - run: pip install project-doctor
+      - run: project-doctor check . --max-unused 0 --max-undeclared 0
 ```
 
 For projects that use uv:
 
 ```yaml
 - name: Check uv lock sync
-  run: pytrim sync-check uv.lock
+  run: project-doctor sync-check uv.lock
 ```
 
 Badge for project docs:
 
 ```markdown
-![PyTrim](https://img.shields.io/badge/pytrim-passing-brightgreen)
+![Project Doctor](https://img.shields.io/badge/project--doctor-passing-brightgreen)
 ```
 
 ## uv
 
-PyTrim understands the common `pyproject.toml` + `uv.lock` workflow:
+Project Doctor understands the common `pyproject.toml` + `uv.lock` workflow:
 
 ```bash
-pytrim analyze --uv
-pytrim sync-check uv.lock
-pytrim explain-package pandas --uv
+project-doctor analyze --uv
+project-doctor sync-check uv.lock
+project-doctor explain-package pandas --uv
 ```
 
 `sync-check` verifies that direct dependencies declared in `pyproject.toml` are represented in `uv.lock`. `explain-package` shows whether a package is declared, which import names map to it, whether it is installed locally, and whether uv has locked it.
 
 ## Performance
 
-PyTrim keeps the default path fast:
+Project Doctor keeps the default path fast:
 
 - installed package metadata is indexed once per analysis context
 - package size checks are skipped unless requested or needed by `--max-package-mb`
@@ -334,7 +334,7 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -e ".[dev,security]"
 .venv/bin/python -m pytest
 .venv/bin/python -m ruff check .
-.venv/bin/python -m mypy src/pytrim tests
+.venv/bin/python -m mypy src/project_doctor tests
 .venv/bin/python -m bandit -r src examples scripts -q
 .venv/bin/python -m pip_audit
 .venv/bin/python scripts/benchmark.py --files 200 --runs 2
@@ -355,7 +355,7 @@ python3 -m venv .venv
 The next serious versions should add:
 
 1. Deeper entrypoint startup benchmarks with clearer default-path waste attribution.
-2. `pytrim fix --lazy-imports` with AST-safe rewrites and backups.
+2. `project-doctor fix --lazy-imports` with AST-safe rewrites and backups.
 3. Lockfile awareness for Poetry, PDM, and pip-tools.
 4. Docker/image-size analysis.
 5. Richer package-name/import-name mapping.

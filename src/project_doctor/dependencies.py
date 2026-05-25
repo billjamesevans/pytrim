@@ -21,7 +21,7 @@ class InstalledPackageIndex:
     """Lookup table for installed package metadata.
 
     `importlib.metadata.packages_distributions()` returns import-name -> distribution-name.
-    PyTrim needs both directions, so build the reverse index once per analysis context
+    Project Doctor needs both directions, so build the reverse index once per analysis context
     instead of scanning the full mapping for every declared dependency.
     """
 

@@ -11,7 +11,7 @@ def render_json(report: AnalysisReport, indent: int = 2) -> str:
 
 
 def render_wow_report(report: AnalysisReport) -> str:
-    lines: list[str] = ["# PyTrim Report", ""]
+    lines: list[str] = ["# Project Doctor Report", ""]
     lines.append(f"Project: `{report.project_path}`")
     lines.append(f"Python files scanned: {report.python_files_scanned}")
     if report.entrypoint:
@@ -73,17 +73,17 @@ def render_wow_report(report: AnalysisReport) -> str:
     lines.append("")
     lines.append("```yaml")
     lines.append("- name: Check Python dependency health")
-    lines.append("  run: pytrim check . --max-unused 0 --max-undeclared 0 --max-package-mb 100")
+    lines.append("  run: project-doctor check . --max-unused 0 --max-undeclared 0 --max-package-mb 100")
     lines.append("```")
     lines.append("")
-    lines.append("![PyTrim](https://img.shields.io/badge/pytrim-passing-brightgreen)")
+    lines.append("![Project Doctor](https://img.shields.io/badge/project--doctor-passing-brightgreen)")
 
     return "\n".join(lines).rstrip() + "\n"
 
 
 def render_markdown(report: AnalysisReport) -> str:
     lines: list[str] = []
-    lines.append("# PyTrim Optimization Report")
+    lines.append("# Project Doctor Optimization Report")
     lines.append("")
     lines.append(f"**Project:** `{report.project_path}`")
     lines.append(f"**Python files scanned:** {report.python_files_scanned}")
@@ -190,7 +190,7 @@ def render_markdown(report: AnalysisReport) -> str:
     lines.append("## Notes")
     lines.append("")
     lines.append(
-        "PyTrim is conservative. Static analysis can miss dynamic imports, plugin systems, "
+        "Project Doctor is conservative. Static analysis can miss dynamic imports, plugin systems, "
         "optional dependencies, and code paths loaded through strings. Treat `unused` as a "
         "review queue, not an automatic delete list."
     )

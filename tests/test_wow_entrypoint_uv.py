@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from pytrim.analyze import analyze_project
-from pytrim.cli import main
-from pytrim.entrypoint import measure_entrypoint_startup
-from pytrim.models import (
+from project_doctor.analyze import analyze_project
+from project_doctor.cli import main
+from project_doctor.entrypoint import measure_entrypoint_startup
+from project_doctor.models import (
     AnalysisReport,
     DependencyUsage,
     EntrypointTiming,
@@ -17,8 +17,8 @@ from pytrim.models import (
     LazyImportCandidate,
     PackageSize,
 )
-from pytrim.report import render_wow_report
-from pytrim.uv import sync_check_uv
+from project_doctor.report import render_wow_report
+from project_doctor.uv import sync_check_uv
 
 
 def test_wow_report_surfaces_shareable_quick_wins() -> None:
@@ -68,7 +68,7 @@ def test_wow_report_surfaces_shareable_quick_wins() -> None:
 
     rendered = render_wow_report(report)
 
-    assert "# PyTrim Report" in rendered
+    assert "# Project Doctor Report" in rendered
     assert "Entrypoint startup: 1.8s" in rendered
     assert "- pandas: 684ms" in rendered
     assert "- openpyxl" in rendered
@@ -139,7 +139,7 @@ def test_cli_analyze_defaults_to_wow_report(tmp_path: Path, capsys: pytest.Captu
 [project]
 name = "demo"
 version = "0.1.0"
-dependencies = ["definitely-not-installed-pytrim-test>=1"]
+dependencies = ["definitely-not-installed-project_doctor-test>=1"]
 """,
         encoding="utf-8",
     )
@@ -149,7 +149,7 @@ dependencies = ["definitely-not-installed-pytrim-test>=1"]
 
     captured = capsys.readouterr()
     assert status == 0
-    assert captured.out.startswith("# PyTrim Report")
+    assert captured.out.startswith("# Project Doctor Report")
     assert "Suggested quick wins" in captured.out
 
 
@@ -169,16 +169,16 @@ dependencies = []
 
     captured = capsys.readouterr()
     assert status == 0
-    assert captured.out.startswith("# PyTrim Report")
+    assert captured.out.startswith("# Project Doctor Report")
     assert "Python files scanned: 1" in captured.out
 
 
 def test_readme_has_ci_copy_paste_and_badge() -> None:
     readme = Path("README.md").read_text(encoding="utf-8")
 
-    assert "![PyTrim](https://img.shields.io/badge/pytrim-passing-brightgreen)" in readme
-    assert "pytrim check . --max-unused 0 --max-undeclared 0 --max-package-mb 100" in readme
-    assert "name: pytrim" in readme
+    assert "![Project Doctor](https://img.shields.io/badge/project--doctor-passing-brightgreen)" in readme
+    assert "project-doctor check . --max-unused 0 --max-undeclared 0 --max-package-mb 100" in readme
+    assert "name: project-doctor" in readme
     assert "actions/checkout@v4" in readme
 
 
@@ -190,9 +190,8 @@ def test_readme_has_sample_report_tagline_and_install_positioning() -> None:
     assert "Startup time: 1.42s" in readme
     assert "Potential avoidable import cost: 630ms" in readme
     assert "Top startup contributors:" in readme
-    assert "pytrim doctor" in readme
-    assert "uv tool install pytrim" in readme
-    assert "name/package ownership is settled" in readme
+    assert "project-doctor doctor" in readme
+    assert "uv tool install project-doctor" in readme
     assert "1. Deeper entrypoint startup benchmarks" in readme
 
 
@@ -249,7 +248,7 @@ version = "2.32.0"
 
     captured = capsys.readouterr()
     assert status == 0
-    assert "PyTrim uv sync check passed" in captured.out
+    assert "Project Doctor uv sync check passed" in captured.out
     assert "Locked direct dependencies: 1" in captured.out
 
 
@@ -281,6 +280,6 @@ version = "2.32.0"
 
     captured = capsys.readouterr()
     assert status == 0
-    assert "PyTrim package explanation: requests" in captured.out
+    assert "Project Doctor package explanation: requests" in captured.out
     assert "Declared: yes" in captured.out
     assert "uv.lock: locked 2.32.0" in captured.out

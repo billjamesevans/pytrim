@@ -29,7 +29,7 @@ DEFAULT_EXCLUDE_DIRS = {
 
 try:
     STDLIB_MODULES = set(sys.stdlib_module_names)
-except AttributeError:  # pragma: no cover - pytrim requires 3.11+, but this keeps the helper defensive.
+except AttributeError:  # pragma: no cover - project_doctor requires 3.11+, but this keeps the helper defensive.
     STDLIB_MODULES = set(sys.builtin_module_names) | {
         "abc", "argparse", "ast", "asyncio", "collections", "concurrent", "contextlib",
         "csv", "dataclasses", "datetime", "decimal", "email", "functools", "hashlib",

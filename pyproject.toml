@@ -3,15 +3,15 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pytrim"
-version = "0.5.0"
+name = "project-doctor"
+version = "0.6.0"
 description = "A local-first health checker for Python imports, dependencies, startup time, and package bloat."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
-  { name = "PyTrim maintainers" }
+  { name = "Project Doctor maintainers" }
 ]
 keywords = ["python", "performance", "imports", "dependencies", "optimizer", "cli"]
 classifiers = [
@@ -29,10 +29,10 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/billjamesevans/pytrim"
-Repository = "https://github.com/billjamesevans/pytrim"
-Issues = "https://github.com/billjamesevans/pytrim/issues"
-Changelog = "https://github.com/billjamesevans/pytrim/releases"
+Homepage = "https://github.com/billjamesevans/project-doctor"
+Repository = "https://github.com/billjamesevans/project-doctor"
+Issues = "https://github.com/billjamesevans/project-doctor/issues"
+Changelog = "https://github.com/billjamesevans/project-doctor/releases"
 
 [project.optional-dependencies]
 dev = [
@@ -49,13 +49,13 @@ security = [
 ]
 
 [project.scripts]
-pytrim = "pytrim.cli:main"
+project-doctor = "project_doctor.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-pytrim = ["py.typed"]
+project_doctor = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

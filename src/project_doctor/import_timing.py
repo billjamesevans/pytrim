@@ -47,7 +47,7 @@ def measure_import_time(module: str, timeout_seconds: float, cwd: Path | None = 
 
     The target module is imported in a child process. This avoids polluting the current
     analyzer process, but the target module's import-time side effects can still occur
-    in that child process. PyTrim only does this when import timing is explicitly enabled.
+    in that child process. Project Doctor only does this when import timing is explicitly enabled.
     """
     if not _MODULE_NAME_RE.fullmatch(module):
         return ImportTiming(
@@ -59,7 +59,7 @@ def measure_import_time(module: str, timeout_seconds: float, cwd: Path | None = 
         )
 
     if cwd is None:
-        with tempfile.TemporaryDirectory(prefix="pytrim-importtime-") as temp_dir:
+        with tempfile.TemporaryDirectory(prefix="project_doctor-importtime-") as temp_dir:
             return _measure_import_time(module, timeout_seconds=timeout_seconds, cwd=Path(temp_dir))
 
     return _measure_import_time(module, timeout_seconds=timeout_seconds, cwd=cwd)

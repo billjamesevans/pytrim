@@ -17,10 +17,10 @@ from .uv import locked_package_version, sync_check_uv, uv_summary_to_dict
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="pytrim",
+        prog="project-doctor",
         description="Analyze a Python project for import-time cost, dependency bloat, and lazy-import opportunities.",
     )
-    parser.add_argument("--version", action="version", version=f"pytrim {__version__}")
+    parser.add_argument("--version", action="version", version=f"project-doctor {__version__}")
 
     subparsers = parser.add_subparsers(dest="command")
     doctor = subparsers.add_parser("doctor", help="Run the default project health report.")
@@ -151,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             report = _run_analysis(args)
         except Exception as exc:  # noqa: BLE001 - CLI should return a clear user-facing error.
-            print(f"pytrim: {exc}", file=sys.stderr)
+            print(f"project-doctor: {exc}", file=sys.stderr)
             return 2
 
     if args.command in {"analyze", "doctor"}:
@@ -253,7 +253,7 @@ def _check_failures(report: AnalysisReport, args: argparse.Namespace) -> list[st
 
 
 def _render_check_text(report: AnalysisReport, failures: list[str]) -> str:
-    lines = [f"PyTrim check {'failed' if failures else 'passed'}", ""]
+    lines = [f"Project Doctor check {'failed' if failures else 'passed'}", ""]
 
     if failures:
         lines.append("Failures:")
@@ -297,7 +297,7 @@ def _render_check_json(report: AnalysisReport, failures: list[str]) -> str:
 
 def _render_uv_sync_text(summary: UvLockSummary) -> str:
     status = "passed" if summary.status == "ok" else "failed"
-    lines = [f"PyTrim uv sync check {status}", ""]
+    lines = [f"Project Doctor uv sync check {status}", ""]
     lines.append(f"- uv.lock: {summary.lock_path}")
     lines.append(f"- Locked packages: {summary.package_count}")
     lines.append(f"- Locked direct dependencies: {len(summary.locked_direct_dependencies)}")
@@ -343,7 +343,7 @@ def _explain_package(package_name: str, project_root: Path, *, use_uv: bool) -> 
 
 def _render_package_explanation(explanation: dict[str, object]) -> str:
     package = str(explanation["package"])
-    lines = [f"PyTrim package explanation: {package}", ""]
+    lines = [f"Project Doctor package explanation: {package}", ""]
     lines.append(f"Declared: {'yes' if explanation['declared'] else 'no'}")
     declarations = explanation.get("declarations")
     if isinstance(declarations, list):

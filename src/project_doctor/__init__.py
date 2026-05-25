@@ -1,4 +1,4 @@
-"""Public API for PyTrim."""
+"""Public API for Project Doctor."""
 
 from .analyze import analyze_project
 from .context import AnalysisContext
@@ -15,7 +15,7 @@ from .models import (
     UvLockSummary,
 )
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
 __all__ = [
     "AnalysisContext",
