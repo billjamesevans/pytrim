@@ -5,8 +5,21 @@ Project Doctor publishes as the `project-doctor` distribution and exposes the `p
 ## Preconditions
 
 - Confirm `https://pypi.org/project/project-doctor/` is available or controlled by this project.
-- Use a PyPI API token or trusted publishing. Do not commit tokens, `.pypirc`, or environment files.
+- Prefer GitHub Trusted Publishing with `.github/workflows/publish.yml`. Use a PyPI API token only if Trusted Publishing is not available.
+- Do not commit tokens, `.pypirc`, or environment files.
 - Build from a clean checkout after tests, linting, type checks, security checks, and package audits pass.
+
+## Trusted Publishing
+
+Configure a PyPI trusted publisher for:
+
+- PyPI project: `project-doctor`
+- Owner: `billjamesevans`
+- Repository: `project-doctor`
+- Workflow: `publish.yml`
+- Environment: `pypi`
+
+Then publish by creating a GitHub release for a version tag or running the Publish to PyPI workflow manually.
 
 ## Build And Check
 
@@ -36,4 +49,3 @@ python -m twine upload dist/*
 python -m pipx run project-doctor --version
 python -m pipx run project-doctor doctor .
 ```
-

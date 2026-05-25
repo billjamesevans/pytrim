@@ -58,3 +58,12 @@ def test_release_docs_cover_pypi_publish_path() -> None:
     assert "python -m twine check dist/*" in release_notes
     assert "python -m twine upload dist/*" in release_notes
     assert "project-doctor" in release_notes
+
+
+def test_pypi_publish_workflow_uses_trusted_publishing() -> None:
+    workflow = Path(".github/workflows/publish.yml").read_text(encoding="utf-8")
+
+    assert "id-token: write" in workflow
+    assert "python -m build" in workflow
+    assert "pypa/gh-action-pypi-publish@release/v1" in workflow
+    assert "environment: pypi" in workflow
